@@ -1,20 +1,13 @@
-From debian:12
+FROM debian:12
 
 RUN apt-get update && \
-    apt-get install -y  mariadb-server mariadb-client && \
-    rm -rf /var//lib/apt/lists/*
+    apt-get install -y mariadb-server && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /run/mysql && \
-    chown -R mysql:mysql /run/mysql && \
-    chown -R  mysql:mysql /var/lib/mysql 
+COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
 
-COPY tools/int-db.sh /usr/local/bin/init-db.sh
+COPY tools/mariadb-init.sh /usr/local/bin/mariadb-init.sh
 
-RUN chmod +x /usr/local/bin//init-db.sh
+RUN chmod +x /usr/local/bin/mariadb-init.sh
 
-EXPOSE 3306 # how we know the correct port
-
-
-ENTRYPOINT ["/usr/local/bin/init-db.sh"]
-
-CMD ["mariadbd", "--user=mysql", "--bind-address=0.0.0.0"]
+ENTRYPOINT ["/usr/local/bin/mariadb-init.sh"]

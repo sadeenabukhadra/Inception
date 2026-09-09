@@ -12,21 +12,17 @@ if [ -f /run/secrets/db_password ]; then
     MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 fi
 
-# Wait for MariaDB
-echo "Waiting for MariaDB..."
+# Check MariaDB connection
+echo "Checking MariaDB connection..."
 
-until mariadb \
+mariadb \
     -h"${MYSQL_HOST}" \
     -u"${MYSQL_USER}" \
     -p"${MYSQL_PASSWORD}" \
     "${MYSQL_DATABASE}" \
-    -e "SELECT 1;" > /dev/null 2>&1
-do
-    echo "MariaDB is not ready yet..."
-    sleep 2
-done
+    -e "SELECT 1;" > /dev/null
 
-echo "MariaDB is ready."
+echo "MariaDB connection successful."
 
 # Create wp-config.php if it does not exist
 if [ ! -f /var/www/html/wp-config.php ]; then
@@ -55,4 +51,4 @@ chown -R www-data:www-data /var/www/html
 echo "WordPress initialization completed."
 
 # Start PHP-FPM in foreground
-exec php-fpm8.2 -F
+exec php-fpm8.4 -F

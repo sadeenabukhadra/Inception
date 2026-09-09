@@ -1,48 +1,57 @@
-services :
-  mariadb :
+services:
+
+  mariadb:
     build:
       context: ./requirements/mariadb
-      dockerfile : Dockerfile
-
-    image : mariadb
-    container_name : mariadb
+      dockerfile: Dockerfile
+    image: mariadb
+    container_name: mariadb
     restart: always
     env_file:
       - .env
-    secrets :
+    secrets:
       - db_root_password
       - db_password
-    volumes :
+    volumes:
       - mariadb_data:/var/lib/mysql
-    networks :
+    networks:
       - inception
 
-    wordpress:
-      build :
-        context : ./requirements/wordpress
-        dockerfile: Dockerfile
-      image: wordpress
-      restart: always
-      env_file:
-        - .env
-      secrets:
-        - db_password
-      volumes:
-        - wordi
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
-      networks :
-        - inception
-
-      depends_on:
-        - mariadb
-
-  ngnix:
+  wordpress:
     build:
-      context : ./requirments/ngnix
+      context: ./requirements/wordpress
       dockerfile: Dockerfile
-    image : ngnix
-    container_name: ngnix
-    restart : always
+    image: wordpress
+    container_name: wordpress
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: mariadb
+    secrets:
+      - db_password
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    image: nginx
+    container_name: nginx
+    restart: always
     env_file:
       - .env
     ports:
@@ -51,32 +60,18 @@ services :
       - wordpress_data:/var/www/html:ro
     networks:
       - inception
-    depends on:
+    depends_on:
       - wordpress
 
-   volumes:
+volumes:
+  mariadb_data:
+  wordpress_data:
 
-     mariadb_data:
-       driver : local
-       driver_opts :
-         type: none
-         o: bind
-         device: /home/sadeen/data/mariadb
+networks:
+  inception:
 
-    wordpress_data:
-      driver: local
-      driver_opts: 
-          type: none
-          o: bind
-          device : /home/sadeen/data/wordpress
-
-    networks:
-      inception:
-        driver: bridge
-    secrets:
-      db_root_password:
-        file:../secrets/db_root_password.txt
-      db_password:
-        file:../secrets/db_password.txt
-
-
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_password:
+    file: ../secrets/db_password.txt

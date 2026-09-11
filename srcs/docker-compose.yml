@@ -16,7 +16,6 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - inception
-
     healthcheck:
       test: ["CMD-SHELL", "mariadb-admin ping -h localhost --silent"]
       interval: 5s
@@ -65,9 +64,9 @@ services:
 
 volumes:
   mariadb_data:
-    external: true
+    name: mariadb_data
   wordpress_data:
-    external: true
+    name: wordpress_data
 
 networks:
   inception:
@@ -77,5 +76,6 @@ networks:
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
+
   db_password:
     file: ../secrets/db_password.txt

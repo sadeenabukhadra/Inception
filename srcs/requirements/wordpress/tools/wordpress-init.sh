@@ -66,10 +66,8 @@ else
 
 fi
 
-# Set WordPress permissions
 chown -R www-data:www-data /var/www/html
 
 echo "WordPress initialization completed."
 
-# Start PHP-FPM in foreground
 exec php-fpm8.4 -F

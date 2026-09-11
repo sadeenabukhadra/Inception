@@ -65,10 +65,14 @@ services:
 
 volumes:
   mariadb_data:
+    external: true
   wordpress_data:
+    external: true
 
 networks:
   inception:
+    name: inception
+    driver: bridge
 
 secrets:
   db_root_password:

@@ -9,19 +9,15 @@ cd /var/www/html
 # Read database password from Docker secret
 MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 
-# Wait for MariaDB to be ready
-echo "Waiting for MariaDB..."
+# Check MariaDB connection
+echo "Checking MariaDB connection..."
 
-until mariadb \
+mariadb \
     -h"${MYSQL_HOST}" \
     -u"${MYSQL_USER}" \
     -p"${MYSQL_PASSWORD}" \
     "${MYSQL_DATABASE}" \
-    -e "SELECT 1;" > /dev/null 2>&1
-do
-    echo "MariaDB is not ready yet..."
-    sleep 2
-done
+    -e "SELECT 1;" > /dev/null
 
 echo "MariaDB connection successful."
 
@@ -39,7 +35,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 
 fi
 
-# Install WordPress if it has not been installed yet
+# Install WordPress and create users on first startup
 if ! wp core is-installed --allow-root; then
 
     echo "Installing WordPress..."

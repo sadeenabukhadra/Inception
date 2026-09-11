@@ -4,23 +4,24 @@ set -e
 
 echo "Starting WordPress initialization..."
 
-# WordPress directory
 cd /var/www/html
 
 # Read database password from Docker secret
-if [ -f /run/secrets/db_password ]; then
-    MYSQL_PASSWORD=$(cat /run/secrets/db_password)
-fi
+MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 
-# Check MariaDB connection
-echo "Checking MariaDB connection..."
+# Wait for MariaDB to be ready
+echo "Waiting for MariaDB..."
 
-mariadb \
+until mariadb \
     -h"${MYSQL_HOST}" \
     -u"${MYSQL_USER}" \
     -p"${MYSQL_PASSWORD}" \
     "${MYSQL_DATABASE}" \
-    -e "SELECT 1;" > /dev/null
+    -e "SELECT 1;" > /dev/null 2>&1
+do
+    echo "MariaDB is not ready yet..."
+    sleep 2
+done
 
 echo "MariaDB connection successful."
 
@@ -29,20 +30,44 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 
     echo "Creating wp-config.php..."
 
-    cp /var/www/html/wp-config-sample.php \
-       /var/www/html/wp-config.php
+    cp wp-config-sample.php wp-config.php
 
-    sed -i "s/database_name_here/${MYSQL_DATABASE}/" \
-        /var/www/html/wp-config.php
+    sed -i "s/database_name_here/${MYSQL_DATABASE}/" wp-config.php
+    sed -i "s/username_here/${MYSQL_USER}/" wp-config.php
+    sed -i "s/password_here/${MYSQL_PASSWORD}/" wp-config.php
+    sed -i "s/localhost/${MYSQL_HOST}/" wp-config.php
 
-    sed -i "s/username_here/${MYSQL_USER}/" \
-        /var/www/html/wp-config.php
+fi
 
-    sed -i "s/password_here/${MYSQL_PASSWORD}/" \
-        /var/www/html/wp-config.php
+# Install WordPress if it has not been installed yet
+if ! wp core is-installed --allow-root; then
 
-    sed -i "s/localhost/${MYSQL_HOST}/" \
-        /var/www/html/wp-config.php
+    echo "Installing WordPress..."
+
+    wp core install \
+        --url="${DOMAIN_NAME}" \
+        --title="${WP_TITLE}" \
+        --admin_user="${WP_ADMIN_USER}" \
+        --admin_password="${WP_ADMIN_PASSWORD}" \
+        --admin_email="${WP_ADMIN_EMAIL}" \
+        --skip-email \
+        --allow-root
+
+    echo "Creating second WordPress user..."
+
+    wp user create \
+        "${WP_USER}" \
+        "${WP_USER_EMAIL}" \
+        --user_pass="${WP_USER_PASSWORD}" \
+        --role=subscriber \
+        --allow-root
+
+    echo "WordPress installation completed."
+
+else
+
+    echo "WordPress is already installed."
+
 fi
 
 # Set WordPress permissions

@@ -1,15 +1,15 @@
-FROM debian:13
+FROM debian:12
 
 RUN apt-get update && apt-get install -y \
-    php8.4 \
-    php8.4-fpm \
-    php8.4-mysql \
-    php8.4-curl \
-    php8.4-gd \
-    php8.4-mbstring \
-    php8.4-xml \
-    php8.4-zip \
-    php8.4-imagick \
+    php8.2 \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-curl \
+    php8.2-gd \
+    php8.2-mbstring \
+    php8.2-xml \
+    php8.2-zip \
+    php8.2-imagick \
     curl \
     mariadb-client \
     ca-certificates \
@@ -28,7 +28,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-
     -o /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp
 
-COPY conf/www.conf /etc/php/8.4/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 COPY tools/wordpress-init.sh /usr/local/bin/wordpress-init.sh
 
 RUN chmod +x /usr/local/bin/wordpress-init.sh \

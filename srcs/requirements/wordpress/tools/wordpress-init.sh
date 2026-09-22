@@ -70,4 +70,4 @@ chown -R www-data:www-data /var/www/html
 
 echo "WordPress initialization completed."
 
-exec php-fpm8.4 -F
+exec php-fpm8.2 -F
